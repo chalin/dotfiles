@@ -22,7 +22,7 @@ git config --global init.defaultBranch main
 alias g=git
 alias gb="git branch -vv"
 alias gr="git remote -v"
-alias gc="git checkout"
+# alias gc="git checkout"
 alias gs="git status"
 
 if ! type __git_complete &> /dev/null; then
@@ -30,10 +30,12 @@ if ! type __git_complete &> /dev/null; then
   if [ -e $BC_GIT ]; then . $BC_GIT; fi
 fi
 
-__git_complete g __git_main
-__git_complete gb _git_branch
-__git_complete gr _git_remote
-__git_complete gc _git_checkout
-__git_complete s _git_status
+if type __git_complete &> /dev/null; then
+  __git_complete g __git_main
+  __git_complete gb _git_branch
+  __git_complete gr _git_remote
+  __git_complete gc _git_checkout
+  __git_complete s _git_status
+fi
 
 source <(npm completion)
