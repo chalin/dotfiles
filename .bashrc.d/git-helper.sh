@@ -205,11 +205,11 @@ function checkMain() {
 
 function gfrups() {
   local current_branch=$(git branch --show-current)
-  local force=0
+  local force=
   if [[ "$1" == "-f" ]]; then shift; force=1; fi
-  if [[ $current_branch != "main" && $current_branch != "master" && !$force ]]; then
+  if [[ $current_branch != "main" && $current_branch != "master" && -z $force ]]; then
     echo "The current branch ($current_branch) isn't 'main' or 'master'."
-    echo "This isn't usually what you want. Use -f to force. Exiting."
+    echo "This isn't usually what you want. Use -f to force ($force). Exiting."
     return
   fi
   local branch=${1:-$current_branch}
