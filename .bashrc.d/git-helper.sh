@@ -116,7 +116,8 @@ function gbd() {
   if _gb | grep $BRANCH | grep -e ' gone\b' > /dev/null; then
     echo "The branch is gone from the remote, FYI."; echo;
   fi
-  read "yN?Delete branch $BRANCH (y/N)? "
+  echo -n "yN?Delete branch $BRANCH (y/N)? "
+  read yN
   if [[ $yN == 'y' ]]; then
     echo
     git branch $DEL $BRANCH
