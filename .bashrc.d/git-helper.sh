@@ -111,9 +111,9 @@ function gbd() {
   BRANCH=$(gbp "$1")
   if [ `echo "$BRANCH" | wc -l` -ne 1 ]; then echo "$BRANCH"; return 1; fi
   echo "Matched branch:"
-  gb | grep $BRANCH
+  _gb | grep $BRANCH
   echo
-  if gb | grep $BRANCH | grep -e ' gone\b' > /dev/null; then
+  if _gb | grep $BRANCH | grep -e ' gone\b' > /dev/null; then
     echo "The branch is gone from the remote, FYI."; echo;
   fi
   read "yN?Delete branch $BRANCH (y/N)? "
@@ -221,7 +221,7 @@ function gfrups() {
 
 function gf() {
   local branch=${1:-main}
-  if gb | grep -qe '^\* $branch'; then
+  if _gb | grep -qe '^\* $branch'; then
     (set -x; gfrups $*)
   else
     echo "You're not on the $branch branch. No git command executed."

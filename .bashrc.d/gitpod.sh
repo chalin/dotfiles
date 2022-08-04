@@ -37,5 +37,3 @@ if type __git_complete &> /dev/null; then
   __git_complete gc _git_checkout
   __git_complete s _git_status
 fi
-
-source <(npm completion)
