@@ -158,6 +158,8 @@ function _gbc() {
   echo "${BRANCH#"${BRANCH%%[![:space:]]*}"}"
 }
 
+function gbg() { _gbg gone; }
+
 # Get local git branch matching the given pattern. Warns if no single match found.
 function gbp() { _gbc "git branch" $*; }
 
@@ -207,11 +209,23 @@ function checkMain() {
 function gfrups() {
   local current_branch=$(git branch --show-current)
   local force=
+  local change=
   if [[ "$1" == "-f" ]]; then shift; force=1; fi
-  if [[ $current_branch != "main" && $current_branch != "master" && -z $force ]]; then
-    echo "The current branch ($current_branch) isn't 'main' or 'master'."
-    echo "This isn't usually what you want. Use -f to force ($force). Exiting."
+  if [[ "$1" == "-c" ]]; then
+    shift; change=1;
+    local default_branch=${1:-main}
+  fi
+  if [[ $current_branch == "main" || $current_branch == "master" || -n $force ]]; then
+    # All is good, fall through
+  elif [[ -z $change ]]; then
+    echo "The current branch ($current_branch) isn't 'main' or 'master'. This isn't common."
+    echo "Use: -c [branch] to switch to main, xor -f to force."
     return
+  elif git diff --quiet; then
+      echo "Switching to $default_branch branch"
+      git switch main || echo "Oops, something went wrong. Exiting" && return
+      current_branch=$(git branch --show-current)
+  else
   fi
   local branch=${1:-$current_branch}
   git fetch upstream && \

@@ -12,6 +12,7 @@ git config --global alias.r 'remote -v'
 git config --global alias.rb rebase
 git config --global alias.pl pull
 git config --global alias.ps push
+git config --global alias.pss 'push --set-upstream'
 git config --global alias.s status
 git config --global alias.sb 'status -sb'
 git config --global alias.st stash
