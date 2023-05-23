@@ -102,7 +102,7 @@ EOF
 function _gb() { git branch -vv $*; }
 # function gbv() { git branch -vv $*; }
 # function gbva() { git branch -va $*; }
-function _gbg() { _gb | grep -e "$1"; }
+function gbg() { _gb | grep -e "${1:-gone}"; }
 
 function gbd() {
   DEL=-d
@@ -158,8 +158,6 @@ function _gbc() {
   echo "${BRANCH#"${BRANCH%%[![:space:]]*}"}"
 }
 
-function gbg() { _gbg gone; }
-
 # Get local git branch matching the given pattern. Warns if no single match found.
 function gbp() { _gbc "git branch" $*; }
 
@@ -206,7 +204,19 @@ function checkMain() {
   fi
 }
 
+function gfrups_usage() {
+  echo "gfrups [-f] [-c [branch1]] [branch2]"
+  echo
+  echo "  Fetch upstream, rebase and push to origin; but first switch to branch1 "
+  echo "  if -c flag is present. Rebasing is done from upstream/branch2, where"
+  echo "  Branch2 defaults to the current branch."
+  echo
+  echo "  -f       Force actions even if not currently on 'main' or 'master'"
+  echo "  -c [br]  First switch to given branch (default main)"
+}
+
 function gfrups() {
+  # Usage:
   local current_branch=$(git branch --show-current)
   local force=
   local change=
@@ -215,23 +225,34 @@ function gfrups() {
     shift; change=1;
     local default_branch=${1:-main}
   fi
+  echo "On branch $current_branch"
   if [[ $current_branch == "main" || $current_branch == "master" || -n $force ]]; then
     # All is good, fall through
   elif [[ -z $change ]]; then
-    echo "The current branch ($current_branch) isn't 'main' or 'master'. This isn't common."
-    echo "Use: -c [branch] to switch to main, xor -f to force."
-    return
+    echo "The current branch isn't 'main' or 'master'. This isn't common."
+    echo
+    gfrups_usage
+    return 1
   elif git diff --quiet; then
-      echo "Switching to $default_branch branch"
-      git switch main || echo "Oops, something went wrong. Exiting" && return
-      current_branch=$(git branch --show-current)
+    echo "Switching to $default_branch branch"
+    git switch $default_branch
+    current_branch=$(git branch --show-current)
+    if [[ $current_branch != $default_branch ]]; then
+      echo "Oops, branch switching failed. Exiting"
+      return 2
+    fi
   else
+    echo "Can't switch branches since there are changes. Aborting."
+    return 3
   fi
   local branch=${1:-$current_branch}
+  set -x
   git fetch upstream && \
-  git rebase upstream/$branch && \
-  git push && \
+    git rebase upstream/$branch && \
+    git push || \
+      return $?;
   _gb | grep -E "^\*"
+  set +x
 }
 
 function gf() {
