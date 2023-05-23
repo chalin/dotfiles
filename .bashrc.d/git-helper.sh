@@ -227,7 +227,7 @@ function gfrups() {
   fi
   echo "On branch $current_branch"
   if [[ $current_branch == "main" || $current_branch == "master" || -n $force ]]; then
-    # All is good, fall through
+    true # All is good, fall through
   elif [[ -z $change ]]; then
     echo "The current branch isn't 'main' or 'master'. This isn't common."
     echo
