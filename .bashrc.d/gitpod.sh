@@ -25,7 +25,14 @@ alias gb="git branch -vv"
 alias gr="git remote -v"
 # alias gc="git checkout"
 alias gs="git status"
-alias hugox='npx -p hugo-extended@latest hugo '
+
+function npx_hugo_vers() {
+  local vers=${1:-latest}
+  npx -p hugo-extended@$vers hugo
+}
+
+alias _hugo='npx_hugo'
+
 
 if ! type __git_complete &> /dev/null; then
   BC_GIT=/usr/share/bash-completion/completions/git
