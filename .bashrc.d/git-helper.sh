@@ -108,9 +108,18 @@ function gbd() {
   local DEL=-d
   if [[ $1 == -D ]]; then DEL=-D; shift; fi
   if [ $# -gt 1 ]; then echo "Usage: gbd [-D] _branch_name_pattern_"; return 1; fi
-  local PATTERN="${1:-gone]}"
-  local BRANCHES=$(git branch -vv | grep -v \* | awk '{print $1}' | grep -Ev 'main|master' | grep -Ee "$PATTERN")
-  local NO_NO_BRANCHES=$(git branch -vv | grep -E '^(\*|\s*main|\s*master)' | awk '{print $2}' | grep -Ee "$PATTERN")
+  local GONE=""
+  local PATTERN=""
+  local MATCH_KIND=""
+  if [[ -z "$1" ]]; then
+    GONE="gone]"
+    MATCH_KIND="GONE"
+  else
+    PATTERN="$1"
+    MATCH_KIND="NON-ACTIVE or NON-DEFAULT"
+  fi
+  local BRANCHES=$(git branch -vv | grep -v \* | grep -e "$GONE" | awk '{print $1}' | grep -Ev 'main|master' | grep -Ee "$PATTERN")
+  local NO_NO_BRANCHES=$(git branch -vv | grep -E '^(\*|\s*main|\s*master)' | grep -e "$GONE" | sed 's/^*//g' | awk '{print $1}' | grep -Ee "$PATTERN")
 
   if [[ -n $NO_NO_BRANCHES ]]; then
     echo;
@@ -123,21 +132,23 @@ function gbd() {
   fi
 
   if [[ -z $BRANCHES ]]; then
-    echo "No NON-ACTIVE or NON-DEFAULT branches match '$PATTERN'."
+    echo "No $MATCH_KIND branches match '$PATTERN'."
     return
   else
-    echo "Matched non-active branches:"
+    echo "Matched $MATCH_KIND branches:"
     for branch in $BRANCHES; do echo "  $branch"; done; echo
   fi
 
   for branch in $BRANCHES; do
-    local BRANCH=$(git branch -vv | grep -Ee "^\s*$branch")
+    local BRANCH=$(git branch -vv | grep -Ee "^\s+$branch\s+")
     if [[ -z $BRANCH ]]; then
       echo "Oops, $branch not found, or it's the active branch that can't be deleted. Skipping"
     else
       echo "Branch $branch details:"; echo "$BRANCH"; echo
     fi
-    echo -n "Delete above branch (y/N/q)? "
+    echo -n "Delete above"
+    if [[ -n $GONE ]]; then echo -n " GONE"; fi
+    echo -n " branch (y/N/q)? "
     read yN
     if [[ $yN == 'y' || $yN == 'Y' ]]; then
       echo; (set -x; git branch $DEL $branch); echo
