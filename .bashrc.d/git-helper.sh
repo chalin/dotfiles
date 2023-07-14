@@ -105,31 +105,53 @@ function _gb() { git branch -vv $*; }
 function gbg() { _gb | grep -e "${1:-gone}"; }
 
 function gbd() {
-  DEL=-d
+  local DEL=-d
   if [[ $1 == -D ]]; then DEL=-D; shift; fi
-  if [ $# -ne 1 ]; then echo "Usage: gbd [-D] _branch_name_pattern_"; return 1; fi
-  BRANCH=$(gbp "$1")
-  if [ `echo "$BRANCH" | wc -l` -ne 1 ]; then echo "$BRANCH"; return 1; fi
-  echo "Matched branch:"
-  _gb | grep $BRANCH
-  echo
-  if _gb | grep $BRANCH | grep -e ' gone\b' > /dev/null; then
-    echo "The branch is gone from the remote, FYI."; echo;
-  fi
-  echo -n "yN?Delete branch $BRANCH (y/N)? "
-  read yN
-  if [[ $yN == 'y' ]]; then
+  if [ $# -gt 1 ]; then echo "Usage: gbd [-D] _branch_name_pattern_"; return 1; fi
+  local PATTERN="${1:-gone]}"
+  local BRANCHES=$(git branch -vv | grep -v \* | awk '{print $1}' | grep -Ev 'main|master' | grep -Ee "$PATTERN")
+  local NO_NO_BRANCHES=$(git branch -vv | grep -E '^(\*|\s*main|\s*master)' | awk '{print $2}' | grep -Ee "$PATTERN")
+
+  if [[ -n $NO_NO_BRANCHES ]]; then
+    echo;
+    echo "WARNING: active or default branches matches pattern but cannot be deleted!"
+    for branch in $NO_NO_BRANCHES; do echo "  $branch"; done; echo
+    echo -n "EXIT now to switch branches (Y/n)? "
+    read yN
+    if [[ -z $yN || $yN == 'y' || $yN == 'Y' ]]; then echo; return; fi
     echo
-    git branch $DEL $BRANCH
-  else
-    echo "Ok, I won't delete $BRANCH."
   fi
+
+  if [[ -z $BRANCHES ]]; then
+    echo "No NON-ACTIVE or NON-DEFAULT branches match '$PATTERN'."
+    return
+  else
+    echo "Matched non-active branches:"
+    for branch in $BRANCHES; do echo "  $branch"; done; echo
+  fi
+
+  for branch in $BRANCHES; do
+    local BRANCH=$(git branch -vv | grep -Ee "^\s*$branch")
+    if [[ -z $BRANCH ]]; then
+      echo "Oops, $branch not found, or it's the active branch that can't be deleted. Skipping"
+    else
+      echo "Branch $branch details:"; echo "$BRANCH"; echo
+    fi
+    echo -n "Delete above branch (y/N/q)? "
+    read yN
+    if [[ $yN == 'y' || $yN == 'Y' ]]; then
+      echo; (set -x; git branch $DEL $branch); echo
+    elif [[ $yN == 'q' || $yN == 'Q' ]]; then
+      echo Quitting
+      return;
+    else
+      echo "  keeping it"; echo
+    fi
+  done
+  echo Done
 }
 
-function gbD() {
-  if [ $# -ne 1 ]; then echo "Usage: gbD _branch_name_pattern_" return 1; fi
-  gbd -D $*;
-}
+function gbD() { gbd -D "$*"; }
 
 # Grep for choice of a branch name
 function _gbc() {
