@@ -118,7 +118,7 @@ function gbd() {
     PATTERN="$1"
     MATCH_KIND="NON-ACTIVE or NON-DEFAULT"
   fi
-  local BRANCHES=$(git branch -vv | grep -v \* | grep -e "$GONE" | awk '{print $1}' | grep -Ev 'main|master' | grep -Ee "$PATTERN")
+  local BRANCHES=$(git branch -vv | grep -v '^*' | grep -e "$GONE" | awk '{print $1}' | grep -Ev '^(main|master)' | grep -Ee "$PATTERN")
   local NO_NO_BRANCHES=$(git branch -vv | grep -E '^(\*|\s*main|\s*master)' | grep -e "$GONE" | sed 's/^*//g' | awk '{print $1}' | grep -Ee "$PATTERN")
 
   if [[ -n $NO_NO_BRANCHES ]]; then
