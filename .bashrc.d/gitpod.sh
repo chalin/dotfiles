@@ -26,12 +26,13 @@ alias gr="git remote -v"
 # alias gc="git checkout"
 alias gs="git status"
 
-function npx_hugo_vers() {
-  local vers=${1:-latest}
-  npx -p hugo-extended@$vers hugo
+function _npx_hugo() {
+  local vers=${1:-latest};
+  shift;
+  npx -p hugo-extended@$vers hugo $*
 }
 
-alias _hugo='npx_hugo'
+alias _hugo='npx -p hugo-extended@${HUGO_VERSION:-latest} hugo'
 
 
 if ! type __git_complete &> /dev/null; then
