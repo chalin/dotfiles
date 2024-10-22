@@ -16,6 +16,7 @@ git config --global alias.pss 'push --set-upstream'
 git config --global alias.s status
 git config --global alias.sb 'status -sb'
 git config --global alias.st stash
+git config --global alias.stu 'stash -u'
 git config --global alias.pop 'stash pop'
 
 git config --global init.defaultBranch main

@@ -41,6 +41,7 @@ function _g() {
         rbmfps)         shift; git rebase master $* && git push -f;;
         s|status)       shift; git status -sb $*;;
         st|stash)       shift; git stash $*;;
+        sta)            shift; git add . && git stash $*;;
         sub)            shift;
                         : ${args:=update --init} # --remote
                         git submodule $args;;
@@ -245,7 +246,7 @@ function gfrups_usage() {
   echo "  Branch2 defaults to the current branch."
   echo
   echo "  -f       Force actions even if not currently on 'main' or 'master'"
-  echo "  -c [br]  First switch to given branch (default main)"
+  echo "  -c [br]  First switch to given branch (default main or master)"
 }
 
 function gfrups() {
@@ -269,8 +270,19 @@ function gfrups() {
   elif git diff --quiet; then
     echo "Switching to $default_branch branch"
     git switch $default_branch
-    current_branch=$(git branch --show-current)
-    if [[ $current_branch != $default_branch ]]; then
+    local current_branch=$(git branch --show-current)
+    if [[ $current_branch == $default_branch ]]; then
+      echo "Switched to $current_branch"
+    elif [[ $default_branch == main ]]; then
+      echo "Oops, branch switching to 'main' failed. Trying 'master'."
+      default_branch=master
+      git switch $default_branch
+      current_branch=$(git branch --show-current)
+      if [[ $current_branch != $default_branch ]]; then
+        echo "Oops, branch switching failed. Exiting"
+        return 2
+      fi
+    else
       echo "Oops, branch switching failed. Exiting"
       return 2
     fi
