@@ -22,7 +22,7 @@ git config --global alias.pop 'stash pop'
 git config --global init.defaultBranch main
 
 alias g=git
-alias gb="git branch -vv"
+alias gb="git branch -vv --color=always --sort=-committerdate | awk 'NR <= 3 {print} NR == 4 {print \"  ...\"; exit}'"
 alias gr="git remote -v"
 # alias gc="git checkout"
 alias gs="git status"
