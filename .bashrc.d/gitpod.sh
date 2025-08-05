@@ -1,4 +1,4 @@
-#
+# cSpell:ignore committerdate
 
 git config --global alias.a add
 git config --global alias.bD 'branch -D'
@@ -22,7 +22,7 @@ git config --global alias.pop 'stash pop'
 git config --global init.defaultBranch main
 
 alias g=git
-alias gb="git branch -vv --color=always --sort=-committerdate | awk 'NR <= 3 {print} NR == 4 {print \"  ...\"; exit}'"
+alias gb="git branch -vv --color=always --sort=-committerdate | awk 'NR <= 5 {print} NR == 6 {print \"  ...\"; exit}'"
 alias gr="git remote -v"
 # alias gc="git checkout"
 alias gs="git status"
