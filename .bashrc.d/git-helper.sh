@@ -1,4 +1,6 @@
 # File git-helper.sh
+#
+# cSpell:ignore gcbr gfru frups gfrups gpsr gfpr rbmfps unshallow oneline glpo gbva gfun
 
 # 2022-04-05: Renaming from g so as to not clash with my new g alias. I'd
 # use gh, but that clashes with GitHub CLI.
@@ -97,6 +99,9 @@ Other commands (not abbr):
 Examples:
   git fetch -p  # prune       git log --pretty=oneline -3        git push -f
   git rebase master -i        git reset --soft HEAD~1
+
+Useful command sequences:
+  gfrups -c && g fap && gbD; gb; gs
 EOF
 }
 
@@ -169,22 +174,24 @@ function gbD() { gbd -D "$*"; }
 function _gbc() {
   if [ $# -ne 2 ]; then
     echo "ERROR: unexpected number of arguments"
-    echo "Usage: _gbc CMD pattern"
+    echo "Usage: _gbc CMD PATTERN-FOR-BRANCH-NAME"
     return 1;
   fi
   CMD="$1"; shift;
-  BRANCH=$($CMD | grep -v '*' | grep -e "$1")
+  PATTERN="$1"; shift;
+  BRANCH=$($CMD | grep -v '*' | grep -e "$PATTERN")
   if [ -z "$BRANCH" ]; then
     reallyWarn;
-    printf "Pattern '$1' did not match any branch (excluding current) in:\n\n"
+    printf "Pattern '$PATTERN' did not match any branch (excluding current) in:\n\n"
     $CMD
     reallyWarn;
     return 1;
   fi
   if [ `echo "$BRANCH" | wc -l` -ne 1 ]; then
     reallyWarn;
-    printf "\nPattern '$1' matched more than one branch:\n\n"
+    printf "\nPattern '$PATTERN' matched more than one branch:\n\n"
     printf "${BRANCH/ / }\n\n"
+    printf "If $PATTERN is a branch name, then to switch to that branch use 'g c <branch-name>'\n"
     reallyWarn;
     return 1;
   fi

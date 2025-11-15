@@ -25,7 +25,9 @@ alias g=git
 alias gb="git branch -vv --color=always --sort=-committerdate | awk 'NR <= 5 {print} NR == 6 {print \"  ...\"; exit}'"
 alias gr="git remote -v"
 # alias gc="git checkout"
-alias gs="git status"
+alias gst="git status"
+alias gsb="git status -sb"
+alias gs="gsb"
 
 function _npx_hugo() {
   local vers=${1:-latest};
