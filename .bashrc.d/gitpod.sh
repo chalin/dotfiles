@@ -1,8 +1,9 @@
-# cSpell:ignore committerdate
+# cSpell:ignore chalin committerdate psar
 
 git config --global alias.a add
 git config --global alias.bD 'branch -D'
 git config --global alias.c checkout
+git config --global alias.cb '!f() { git checkout -b "chalin-m24-${1:-dev}-$(date +%Y-%m%d)"; }; f'
 git config --global alias.cm commit
 git config --global alias.b 'branch -vv'
 git config --global alias.f fetch
@@ -12,6 +13,17 @@ git config --global alias.r 'remote -v'
 git config --global alias.rb rebase
 git config --global alias.pl pull
 git config --global alias.ps push
+git config --global alias.push-all-remotes '!f() {
+  if [[ $# -lt 1 ]]; then
+    echo "Usage: push-all-remotes BRANCH"
+    echo "  To push the current branch, use '.' as the branch name."
+    return 1;
+  fi
+  local b=${1:-.}
+  if [[ $b == "." ]]; then b=$(git branch --show-current); fi
+  for r in $(git remote); do (set -x; git push "$r" "$b"); done
+}; f'
+git config --global alias.psar push-all-remotes
 git config --global alias.pss 'push --set-upstream'
 git config --global alias.s status
 git config --global alias.sb 'status -sb'
@@ -22,12 +34,19 @@ git config --global alias.pop 'stash pop'
 git config --global init.defaultBranch main
 
 alias g=git
-alias gb="git branch -vv --color=always --sort=-committerdate | awk 'NR <= 5 {print} NR == 6 {print \"  ...\"; exit}'"
 alias gr="git remote -v"
-# alias gc="git checkout"
 alias gst="git status"
 alias gsb="git status -sb"
 alias gs="gsb"
+
+function gb() {
+  # An argument of 0 means no limit.
+  local n=${1:-6}
+  if [[ $n -lt 1 ]]; then n=999; fi
+  git branch -vv --color=always --sort=-committerdate | \
+    awk -v limit="$n" \
+      'NR <= limit {print} NR == limit+1 {print "  ..."; exit}'
+}
 
 function _npx_hugo() {
   local vers=${1:-latest};

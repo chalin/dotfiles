@@ -1,6 +1,6 @@
 # File git-helper.sh
 #
-# cSpell:ignore gcbr gfru frups gfrups gpsr gfpr rbmfps unshallow oneline glpo gbva gfun
+# cSpell:ignore chalin gcbr gfru frups gfrups gpsr gfpr rbmfps unshallow oneline glpo gbva gfun gpsar
 
 # 2022-04-05: Renaming from g so as to not clash with my new g alias. I'd
 # use gh, but that clashes with GitHub CLI.
@@ -92,9 +92,12 @@ Other commands (not abbr):
   gbp  Print the name of the branch matching the branch-pattern-arg.
   gbv  gb -vv
   gbva gb -va
+  gcb  create a new branch with a default name of 'dev' and prefix of 'm24'
+  gcbr checkout -b <remote>/<branch> or pattern
   gfru git/fetch/rebase upstream (output filtered)
   gfrups git/fetch/rebase upstream (output filtered)
   glpo git log --pretty=oneline \$\*
+  gpsar push all remotes (output filtered)
 
 Examples:
   git fetch -p  # prune       git log --pretty=oneline -3        git push -f
@@ -215,6 +218,28 @@ function gc() {
   git checkout $BRANCH; git branch
 }
 
+function git_create_branch() {
+  if [[ $1 == -h || $1 == --help ]]; then
+    echo "Usage: git_create_branch [--help] [branch:-dev] [prefix:-m24]"
+    return 0;
+  fi
+  local branch=${1:-dev}
+  local prefix=${2:-m24}
+  local new_branch="chalin-${prefix}-${branch}-$(date +%Y-%m%d)"
+  echo "Creating branch $new_branch"
+  echo "Are you sure? (y/N)"
+  read yn
+  if [[ $yn != "y" && $yn != "Y" ]]; then
+    echo "Okay, not creating branch. Exiting."
+    return 0;
+  fi
+  git checkout -b $new_branch
+  echo "Branch $branch created and checked out"
+  return 0;
+}
+
+function gcb() { git_create_branch $*; }
+
 function gcbr() {
   if [[ $# -lt 1 || $# -gt 2 ]]; then echo "Usage error: gcbr [<remote>/<branch>|pattern]"; return 1; fi
   local REMOTE_BRANCH="$1"
@@ -334,6 +359,39 @@ function gfpr() {
       echo Which PR would you like to merge?
   fi
 }
+
+function git_push_all_remotes() {
+  if [[ $1 == -h || $1 == --help ]]; then
+    echo "Usage: git_push_all_remotes [--help|--quiet] [branch]"
+    echo "  If no branch is provided, the current branch is used."
+    return 0;
+  fi
+  if [[ $1 == -q || $1 == --quiet ]]; then
+    local quiet=1; shift;
+  fi
+  local branch=${1:-$(git branch --show-current)}
+  local remotes=$(git remote)
+  echo "Pushing $branch to all remotes: ${remotes//$'\n'/, }"
+  echo "Are you sure? (y/N)"
+  read yn
+  if [[ $yn != "y" && $yn != "Y" ]]; then
+    echo "Okay, not pushing. Exiting."
+    return 0;
+  fi
+  local failed=0
+  echo "Pushing $branch to all remotes:"
+  for r in $remotes; do
+    if [[ -n $quiet ]]; then
+      printf "$r ... "
+      git push "$r" "$branch" > /dev/null || failed=1
+    else
+      (set -x; git push "$r" "$branch") || failed=1
+    fi
+  done
+  return "$failed"
+}
+
+function gpsar() { git_push_all_remotes $*; }
 
 function gpsr() {
   if [[ $# -gt 2 ]]; then
