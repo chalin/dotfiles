@@ -213,6 +213,10 @@ function gc() {
     echo "Unexpected arguments. Usage: gc _branch_name_pattern_"
     return 1;
   fi
+  local current=$(git branch --show-current)
+  if [[ $current == $1 || $current =~ $1 ]]; then
+    echo "Already on '$current'"; return 0;
+  fi
   local BRANCH=$(gbp "$1")
   if [ `echo "$BRANCH" | wc -l` -ne 1 ]; then echo "$BRANCH"; return 1; fi
   git checkout $BRANCH; git branch
@@ -223,18 +227,27 @@ function git_create_branch() {
     echo "Usage: git_create_branch [--help] [branch:-dev] [prefix:-m24]"
     return 0;
   fi
+  local b=$(git branch --show-current)
+  if [[ $b != main && $b != master ]]; then
+    echo "You're not on 'main' or 'master' branch. Is this what you want?"
+    echo "Create a new branch from '$b'? (y/N)"
+    read yn
+    if [[ $yn != "y" && $yn != "Y" ]]; then
+      echo "Exiting. Switch branches and try again."
+      return 0;
+    fi
+  fi
   local branch=${1:-dev}
   local prefix=${2:-m24}
   local new_branch="chalin-${prefix}-${branch}-$(date +%Y-%m%d)"
-  echo "Creating branch $new_branch"
-  echo "Are you sure? (y/N)"
+  printf "Create branch\n\n  $new_branch\n\nover\n\n  $b\n\n? (Y/n) "
   read yn
-  if [[ $yn != "y" && $yn != "Y" ]]; then
-    echo "Okay, not creating branch. Exiting."
+  if [[ -n $yn && $yn != "y" && $yn != "Y" ]]; then
+    echo "Okay, exiting."
     return 0;
   fi
   git checkout -b $new_branch
-  echo "Branch $branch created and checked out"
+  echo "Branch $new_branch created from $b and checked out"
   return 0;
 }
 

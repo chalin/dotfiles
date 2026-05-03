@@ -14,8 +14,8 @@ git config --global alias.rb rebase
 git config --global alias.pl pull
 git config --global alias.ps push
 git config --global alias.push-all-remotes '!f() {
-  if [[ $# -lt 1 ]]; then
-    echo "Usage: push-all-remotes BRANCH"
+  if [[ $# -lt 1 || $1 == -h || $1 == --help ]]; then
+    echo "Usage: push-all-remotes [-h] <BRANCH:-.>"
     echo "  To push the current branch, use '.' as the branch name."
     return 1;
   fi
@@ -24,7 +24,15 @@ git config --global alias.push-all-remotes '!f() {
   for r in $(git remote); do (set -x; git push "$r" "$b"); done
 }; f'
 git config --global alias.psar push-all-remotes
-git config --global alias.pss 'push --set-upstream'
+git config --global alias.pss '!f() {
+  if [[ $1 == -h || $1 == --help ]]; then
+    echo "Usage: pss [-h] [<remote:-origin> [branch:-HEAD]]"
+    echo "  If no branch is provided, 'HEAD' is used,"
+    echo "  which refers to the current branch."
+    return 0;
+  fi
+  set -x; git push --set-upstream ${1:-origin} ${2:-HEAD};
+}; f'
 git config --global alias.s status
 git config --global alias.sb 'status -sb'
 git config --global alias.st stash
